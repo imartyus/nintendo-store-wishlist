@@ -30,3 +30,17 @@ body {
 button {
   font-family: "Roboto", arial, sans-serif;
 }
+
+.btn {
+  padding: 8px 10px;
+  background-color: var(--color-blue);
+  color: var(--text-color);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  background-color: var(--color-grey);
+  cursor: not-allowed;
+}

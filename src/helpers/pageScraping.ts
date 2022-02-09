@@ -1,9 +1,12 @@
 import { getWishlist, updateBadge, updateWishlist } from './browserApi'
-import { WishlistItem } from '../types'
+import type { WishlistItem } from '../types'
 
-const priceQuery = "span[data-qa='mfeCtaMain#offer0#finalPrice']"
-const ogPriceQuery = "span[data-qa='mfeCtaMain#offer0#originalPrice']"
-const saleEndsQuery = "span[data-qa='mfeCtaMain#offer0#discountDescriptor']"
+type PriceResponse = {
+  amount: string
+  end_datetime?: string
+}
+
+const gameIdQuery = '.buy-now-link'
 const nameQuery = 'h1'
 
 export async function fetchAndScrapeUrl(url: string): Promise<WishlistItem> {
@@ -11,17 +14,19 @@ export async function fetchAndScrapeUrl(url: string): Promise<WishlistItem> {
     const res = await fetch(url)
     const html = await res.text()
     const doc = <HTMLElement>htmlToElement(html)
-    const price = <HTMLElement>doc.querySelector(priceQuery)
-    const ogPrice = <HTMLElement>doc.querySelector(ogPriceQuery)
-    const saleEnds = <HTMLElement>doc.querySelector(saleEndsQuery)
+    const gameIdElement = <HTMLAnchorElement>doc.querySelector(gameIdQuery)
     const title = <HTMLElement>doc.querySelector(nameQuery)
+    const gameId = parseInt(gameIdElement.href.split('?title=')[1])
+    const { discount_price, regular_price } = await fetchPrice(gameId)
+
     try {
       return {
         title: title.innerText.trim(),
-        price: price.innerText,
-        ogPrice: ogPrice ? ogPrice.innerText : null,
-        saleEnds: saleEnds ? saleEnds.innerText : null,
-        url
+        price: discount_price ? discount_price.amount : regular_price.amount,
+        ogPrice: discount_price ? regular_price.amount : '',
+        saleEnds: discount_price ? `Expires on ${(new Date(discount_price.end_datetime)).toLocaleString()}` : '',
+        url,
+        gameId
       }
     } catch (e) {
       // console.log(e);
@@ -30,6 +35,23 @@ export async function fetchAndScrapeUrl(url: string): Promise<WishlistItem> {
   } catch (err) {
     throw err
   }
+}
+
+export function fetchPrice(gameId: number): Promise<{ discount_price: PriceResponse, regular_price: PriceResponse }> {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get(['locale'], async function ({ locale }) {
+      const country = locale.country || 'US'
+      const lang = locale.lang || 'en'
+      try {
+        const priceApi = await fetch(`https://api.ec.nintendo.com/v1/price?country=${country}&lang=${lang}&ids=${gameId}`)
+        const priceRes = await priceApi.json()
+        const { discount_price, regular_price } = priceRes?.prices[0] || {}
+        resolve({ discount_price, regular_price })
+      } catch (error) {
+        reject(error)
+      }
+    })
+  })
 }
 
 function htmlToElement(html: string) {

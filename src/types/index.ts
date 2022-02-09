@@ -1,8 +1,8 @@
 export type Wishlist = {
   items: WishlistItem[];
   lastUpdated?: number;
-  sortBy: string;
-  sortOrder: string;
+  sortBy: 'title' | 'price';
+  sortOrder: 'asc' | 'desc';
 }
 
 export type WishlistItem = {
@@ -12,4 +12,5 @@ export type WishlistItem = {
   saleEnds?: string;
   url: string;
   outdated?: boolean;
+  gameId: number;
 }
