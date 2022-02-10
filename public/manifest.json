@@ -4,7 +4,11 @@
   "version": "1.0",
   "manifest_version": 3,
   "action": {
-    "default_popup": "index.html"
+    "default_popup": "index.html",
+    "default_icon": {
+      "48": "nin-icon-48.png",
+      "128": "nin-icon-128.png"
+    }
   },
   "background": {
     "service_worker": "background.js"
@@ -17,6 +21,7 @@
   ],
   "host_permissions": [
     "https://nintendo.com/",
+    "https://nintendo.ru/",
     "https://api.ec.nintendo.com/"
   ]
 }

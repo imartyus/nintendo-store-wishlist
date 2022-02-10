@@ -18,7 +18,6 @@
       sortOrder = 'asc'
     }
     updateWishlist({ sortBy, sortOrder }, true)
-    // this.gameList = this.getSortedList(this.gameList)
   }
 </script>
 
@@ -130,7 +129,7 @@
 }
 
 .wl-item a:hover {
-  color: var(--color-blue);
+  color: var(--nin-orange);
 }
 
 .og-price {

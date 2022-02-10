@@ -51,7 +51,8 @@ export function updateWishlist (updatedWishlist: Partial<Wishlist>, partialUpdat
 
 export function updateBadge (items: WishlistItem[]) {
   const numOnSale = items.reduce((num, item) => item.ogPrice ? num + 1 : num, 0)
-  chrome.browserAction.setBadgeText({ text: numOnSale ? numOnSale.toString() : '' })
+  chrome.action.setBadgeText({ text: numOnSale ? `${numOnSale}` : '' })
+  chrome.action.setBadgeBackgroundColor({ color: '#e60012' })
 }
 
 export function isOnStoreUrl (cb: (currentUrl: string, isOnStore: boolean) => any) {

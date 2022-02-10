@@ -16,8 +16,8 @@ export async function fetchAndScrapeUrl(url: string): Promise<WishlistItem> {
     const doc = <HTMLElement>htmlToElement(html)
     const gameIdElement = <HTMLAnchorElement>doc.querySelector(gameIdQuery)
     const title = <HTMLElement>doc.querySelector(nameQuery)
-    const gameId = parseInt(gameIdElement.href.split('?title=')[1])
-    const { discount_price, regular_price } = await fetchPrice(gameId)
+    const titleId = parseInt(gameIdElement.href.split('?title=')[1])
+    const { discount_price, regular_price } = await fetchPrice(titleId)
 
     try {
       return {
@@ -26,7 +26,7 @@ export async function fetchAndScrapeUrl(url: string): Promise<WishlistItem> {
         ogPrice: discount_price ? regular_price.amount : '',
         saleEnds: discount_price ? `Expires on ${(new Date(discount_price.end_datetime)).toLocaleString()}` : '',
         url,
-        gameId
+        titleId
       }
     } catch (e) {
       // console.log(e);
@@ -37,13 +37,13 @@ export async function fetchAndScrapeUrl(url: string): Promise<WishlistItem> {
   }
 }
 
-export function fetchPrice(gameId: number): Promise<{ discount_price: PriceResponse, regular_price: PriceResponse }> {
+export function fetchPrice(titleId: number): Promise<{ discount_price: PriceResponse, regular_price: PriceResponse }> {
   return new Promise((resolve, reject) => {
     chrome.storage.sync.get(['locale'], async function ({ locale }) {
       const country = locale.country || 'US'
       const lang = locale.lang || 'en'
       try {
-        const priceApi = await fetch(`https://api.ec.nintendo.com/v1/price?country=${country}&lang=${lang}&ids=${gameId}`)
+        const priceApi = await fetch(`https://api.ec.nintendo.com/v1/price?country=${country}&lang=${lang}&ids=${titleId}`)
         const priceRes = await priceApi.json()
         const { discount_price, regular_price } = priceRes?.prices[0] || {}
         resolve({ discount_price, regular_price })

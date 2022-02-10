@@ -11,7 +11,8 @@
 	let gameList = []
 	let sortBy: 'title' | 'price'
 	let sortOrder: 'asc' | 'desc'
-	let lastUpdated: string | null
+	let lastUpdated: string
+	let refreshing: boolean
 
 	function getSortedList (_sortBy, _sortOrder) {
 		const NUMERIC_REGEXP = /[-]{0,1}[\d]*[.]{0,1}[\d]+/g // extract price number
@@ -43,22 +44,32 @@
 		})
 	}
 
-	onMount(() => {
-		getWishlist(wishlist => {
-				gameList = wishlist.items
-        sortBy = wishlist.sortBy || 'title'
-        sortOrder = wishlist.sortOrder || 'asc'
-        lastUpdated = wishlist.lastUpdated ? (new Date(wishlist.lastUpdated)).toLocaleString() : null
+	function manualRefresh () {
+		refreshing = true
+		refreshPriceData().then(_ => {
+			refreshing = false
+			initWishlist()
+		})
+	}
 
-        isOnStoreUrl((currentUrl, isStoreUrl) => {
-          if (isStoreUrl) {
-            const existingGame = wishlist.items.find(item => item.url === currentUrl)
-            onStoreUrl = currentUrl
-            onStoreAlreadyAdded = !!existingGame
-          }
-        })
-      })
-	});
+	function initWishlist() {
+		getWishlist(wishlist => {
+			gameList = wishlist.items
+			sortBy = wishlist.sortBy || 'title'
+			sortOrder = wishlist.sortOrder || 'asc'
+			lastUpdated = wishlist.lastUpdated ? (new Date(wishlist.lastUpdated)).toLocaleString() : ''
+
+			isOnStoreUrl((currentUrl, isStoreUrl) => {
+				if (isStoreUrl) {
+					const existingGame = wishlist.items.find(item => item.url === currentUrl)
+					onStoreUrl = currentUrl
+					onStoreAlreadyAdded = !!existingGame
+				}
+			})
+		})
+	}
+
+	onMount(initWishlist);
 
 	$: gameList = getSortedList(sortBy, sortOrder)
 
@@ -67,7 +78,7 @@
 <main>
 	{#if !onStoreUrl}
 		<section class="info-block">
-			Open this extension on a PlayStation Store product page to add it to the Wishlist
+			Open this extension on a Nintendo e-shop product page to add it to the Wishlist
 		</section>
 	{:else}
 		<section>
@@ -78,6 +89,22 @@
 	{/if}
 	{#if gameList.length}
 		<Wishlist bind:gameList bind:sortBy bind:sortOrder />
+		<section class="bottom-actions">
+			<div>
+					<button 
+						class="manual-refresh-button"
+						on:click={manualRefresh}
+						disabled={refreshing}
+					>
+						{refreshing ? 'Refreshing...' : 'Refresh prices 🔄'}
+					</button>
+					{#if lastUpdated}
+						<div class="last-updated">
+							Last updated: <span>{lastUpdated}</span>
+						</div>
+					{/if}
+			</div>
+		</section>
 	{/if}
 </main>
 
@@ -95,17 +122,17 @@
   padding: 12px;
 }
 
-.error-msg {
+/* .error-msg {
   color: var(--color-error);
   font-size: 13px;
   margin-left: 8px;
-}
+} */
 
-.warn-msg {
+/* .warn-msg {
   color: var(--color-warn);
   font-size: 13px;
   margin-left: 8px;
-}
+} */
 
 .last-updated {
   float: right;
@@ -113,7 +140,7 @@
 }
 
 .bottom-actions {
-  color: var(--color-grey);
+  color: var(--color-gray);
   padding-top: 18px;
 }
 

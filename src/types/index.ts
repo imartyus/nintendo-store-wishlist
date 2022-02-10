@@ -12,5 +12,5 @@ export type WishlistItem = {
   saleEnds?: string;
   url: string;
   outdated?: boolean;
-  gameId: number;
+  titleId: number;
 }
