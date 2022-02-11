@@ -6,7 +6,8 @@
 	--color-error: orangered;
 	--color-warn: orange;
 	--color-grey: grey;
-	--text-color: white;
+  --color-white: white;
+	--text-color: rgb(72, 72, 72);
 	--bg-color: white;
   --nin-orange: #e60012;
 }
@@ -35,7 +36,7 @@ button {
 .btn {
   padding: 8px 10px;
   background-color: var(--nin-orange);
-  color: var(--text-color);
+  color: var(--color-white);
   border: none;
   border-radius: 5px;
   cursor: pointer;

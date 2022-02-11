@@ -24,7 +24,7 @@ export async function fetchAndScrapeUrl(url: string): Promise<WishlistItem> {
         title: title.innerText.trim(),
         price: discount_price ? discount_price.amount : regular_price.amount,
         ogPrice: discount_price ? regular_price.amount : '',
-        saleEnds: discount_price ? `Expires on ${(new Date(discount_price.end_datetime)).toLocaleString()}` : '',
+        saleEnds: discount_price ? `Sale ends ${(new Date(discount_price.end_datetime)).toLocaleString()}` : '',
         url,
         titleId
       }
