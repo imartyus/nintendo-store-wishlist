@@ -1,7 +1,7 @@
 {
-  "name": "Getting Started Example",
-  "description": "Build an Extension!",
-  "version": "1.0",
+  "name": "Nintendo e-shop wishlist",
+  "description": "Keep track of the games you want to buy on Nintendo e-shop and their current prices.",
+  "version": "1.0.0",
   "manifest_version": 3,
   "action": {
     "default_popup": "index.html",

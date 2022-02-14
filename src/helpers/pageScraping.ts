@@ -6,6 +6,12 @@ type PriceResponse = {
   end_datetime?: string
 }
 
+type FetchPricesResponse = {
+  discount_price: PriceResponse
+  regular_price: PriceResponse
+  title_id: number
+}
+
 const gameIdQuery = '.buy-now-link'
 const nameQuery = 'h1'
 
@@ -17,7 +23,7 @@ export async function fetchAndScrapeUrl(url: string): Promise<WishlistItem> {
     const gameIdElement = <HTMLAnchorElement>doc.querySelector(gameIdQuery)
     const title = <HTMLElement>doc.querySelector(nameQuery)
     const titleId = parseInt(gameIdElement.href.split('?title=')[1])
-    const { discount_price, regular_price } = await fetchPrice(titleId)
+    const [{ discount_price, regular_price }] = await fetchPrice(titleId)
 
     try {
       return {
@@ -37,7 +43,7 @@ export async function fetchAndScrapeUrl(url: string): Promise<WishlistItem> {
   }
 }
 
-export function fetchPrice(titleId: number): Promise<{ discount_price: PriceResponse, regular_price: PriceResponse }> {
+export function fetchPrice(titleId: number | string): Promise<FetchPricesResponse[]> {
   return new Promise((resolve, reject) => {
     chrome.storage.sync.get(['locale'], async function ({ locale }) {
       const country = locale.country || 'US'
@@ -45,8 +51,7 @@ export function fetchPrice(titleId: number): Promise<{ discount_price: PriceResp
       try {
         const priceApi = await fetch(`https://api.ec.nintendo.com/v1/price?country=${country}&lang=${lang}&ids=${titleId}`)
         const priceRes = await priceApi.json()
-        const { discount_price, regular_price } = priceRes?.prices[0] || {}
-        resolve({ discount_price, regular_price })
+        resolve(priceRes.prices)
       } catch (error) {
         reject(error)
       }
@@ -68,14 +73,18 @@ export function refreshPriceData(): Promise<void> {
         return resolve()
       }
 
-      const requests = wishlist.items.map(item => fetchAndScrapeUrl(item.url))
+      const titleIds = wishlist.items.reduce((acc, next) => acc += `${acc === '' ? '' : ','}${next.titleId}`, '')
 
-      Promise.allSettled(requests)
-        .then(results => {
+      fetchPrice(titleIds)
+        .then(prices => {
           const updatedItems = wishlist.items.map(item => {
-            const updatedItem = results.find(el => el.status === 'fulfilled' && el.value.url === item.url)
-            // @ts-ignore
-            return updatedItem ? updatedItem.value : { ...item, outdated: true }
+            const { discount_price, regular_price } = prices.find(price => price.title_id === item.titleId)
+            return {
+              ...item,
+              price: discount_price ? discount_price.amount : regular_price.amount,
+              ogPrice: discount_price ? regular_price.amount : '',
+              saleEnds: discount_price ? `Sale ends ${(new Date(discount_price.end_datetime)).toLocaleString()}` : '',
+            }
           })
 
           const newWishlist = {
@@ -87,7 +96,11 @@ export function refreshPriceData(): Promise<void> {
         })
         .catch(err => {
           console.log('Data refresh error: ', err)
-          resolve()
+          const newWishlist = {
+            items: wishlist.items.map(item => ({ ...item, outdated: true })),
+            lastUpdated: Date.now()
+          }
+          updateWishlist(newWishlist, true).then(resolve)
         })
     })
   })
