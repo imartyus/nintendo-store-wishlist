@@ -12,17 +12,30 @@ type FetchPricesResponse = {
   title_id: number
 }
 
-const gameIdQuery = '.buy-now-link'
+// const gameIdQuery = '.buy-now-link'
 const nameQuery = 'h1'
 
 export async function fetchAndScrapeUrl(url: string): Promise<WishlistItem> {
   try {
+    let titleId: number
+
     const res = await fetch(url)
     const html = await res.text()
+
     const doc = <HTMLElement>htmlToElement(html)
-    const gameIdElement = <HTMLAnchorElement>doc.querySelector(gameIdQuery)
+    // const gameIdElement = <HTMLAnchorElement>doc.querySelector(gameIdQuery)
+    if (url.includes('nintendo.com')) {
+      // We are on NA store
+      const parsed_1 = html.split('"nsuid":"')
+      const parsed_2 = parsed_1[1].split('",')
+      titleId = parseInt(parsed_2[0])
+    } else {
+      // We are on RU store
+      const parsed_1 = html.split('nsuid: "')
+      const parsed_2 = parsed_1[1].split('",')
+      titleId = parseInt(parsed_2[0])
+    }
     const title = <HTMLElement>doc.querySelector(nameQuery)
-    const titleId = parseInt(gameIdElement.href.split('?title=')[1])
     const [{ discount_price, regular_price }] = await fetchPrice(titleId)
 
     try {
@@ -84,6 +97,7 @@ export function refreshPriceData(): Promise<void> {
               price: discount_price ? discount_price.amount : regular_price.amount,
               ogPrice: discount_price ? regular_price.amount : '',
               saleEnds: discount_price ? `Sale ends ${(new Date(discount_price.end_datetime)).toLocaleString()}` : '',
+              outdated: false
             }
           })
 

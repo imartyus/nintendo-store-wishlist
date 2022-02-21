@@ -41,15 +41,17 @@
 					}
 					loading = false
 				})
+				.catch(err => {
+					console.log('Error in adding from tab: ', err);
+				})
 		})
 	}
 
-	function manualRefresh () {
+	async function manualRefresh () {
 		refreshing = true
-		refreshPriceData().then(_ => {
-			refreshing = false
-			initWishlist()
-		})
+		await refreshPriceData()
+		refreshing = false
+		initWishlist()
 	}
 
 	function initWishlist() {

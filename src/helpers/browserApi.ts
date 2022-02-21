@@ -1,7 +1,7 @@
 import type { Wishlist, WishlistItem } from "../types"
 
-const storeUrlTesterEN = /https:\/\/www\.nintendo\.com\S*\/games\/detail\/\S+/g
-const storeUrlTesterRU = /https:\/\/www\.nintendo\.ru\/-\/-Nintendo-Switch\/\S+\.html/g
+const storeUrlTesterEN = /https:\/\/www\.nintendo\.com\S*\/store\/products\/\S+/g
+const storeUrlTesterRU = /https:\/\/www\.nintendo\.ru\/-\/-?Nintendo-Switch\/\S+\.html/g
 
 // const testItem = {
 //   title: 'TEST',
