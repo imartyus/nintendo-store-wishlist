@@ -20,8 +20,7 @@
   "permissions": [
     "activeTab",
     "alarms",
-    "storage",
-    "webRequest"
+    "storage"
   ],
   "host_permissions": [
     "https://nintendo.com/",
