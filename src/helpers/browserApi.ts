@@ -1,6 +1,7 @@
-import type { Wishlist, WishlistItem } from "../types"
+import type { Wishlist, WishlistItem } from '../types'
 
-const storeUrlTesterEN = /https:\/\/www\.nintendo\.com\S*\/store\/products\/\S+/g
+const storeUrlTesterUsCan = /https:\/\/www\.nintendo\.com\S*\/store\/products\/\S+/g
+const storeUrlTesterAmericas = /https:\/\/www\.nintendo\.com\S*\/games\/detail\/\S+/g
 const storeUrlTesterRU = /https:\/\/www\.nintendo\.ru\/-\/-?Nintendo-Switch\/\S+\.html/g
 
 // const testItem = {
@@ -27,14 +28,14 @@ export function getWishlist (cb: (arg1: Wishlist) => void) {
         items: [],
         lastUpdated: null,
         sortBy: 'title',
-        sortOrder: 'asc',
+        sortOrder: 'asc'
       })
     }
   })
 }
 
-export function updateWishlist (updatedWishlist: Partial<Wishlist>, partialUpdate = false): Promise<void> {
-  return new Promise(resolve => {
+export async function updateWishlist (updatedWishlist: Partial<Wishlist>, partialUpdate = false): Promise<void> {
+  return await new Promise(resolve => {
     if (partialUpdate) {
       getWishlist(wishlist => {
         chrome.storage.sync.set({ wishlist: { ...wishlist, ...updatedWishlist } }, () => {
@@ -58,6 +59,6 @@ export function updateBadge (items: WishlistItem[]) {
 export function isOnStoreUrl (cb: (currentUrl: string, isOnStore: boolean) => any) {
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
     const currentUrl = tabs[0].url
-    cb(currentUrl, storeUrlTesterEN.test(currentUrl) || storeUrlTesterRU.test(currentUrl))
+    cb(currentUrl, storeUrlTesterAmericas.test(currentUrl) || storeUrlTesterUsCan.test(currentUrl) || storeUrlTesterRU.test(currentUrl))
   })
 }

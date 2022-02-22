@@ -34,7 +34,6 @@
 				.then(gameData => {
 					if (gameData) {
 						wishlist.items.push(gameData)
-						// gameList.push(gameData)
 						gameList = getSortedList(sortBy, sortOrder, [...gameList, gameData])
 						updateWishlist(wishlist)
 						onStoreAlreadyAdded = true

@@ -1,68 +1,63 @@
 import { getWishlist, updateBadge, updateWishlist } from './browserApi'
 import type { WishlistItem } from '../types'
 
-type PriceResponse = {
+interface PriceResponse {
   amount: string
   end_datetime?: string
 }
 
-type FetchPricesResponse = {
-  discount_price: PriceResponse
+interface FetchPricesResponse {
+  discount_price?: PriceResponse
   regular_price: PriceResponse
   title_id: number
 }
 
-// const gameIdQuery = '.buy-now-link'
-const nameQuery = 'h1'
+function pickBetween (input: string, start: string, end: string) {
+  const parsed_1 = input.split(start)
+  if (parsed_1.length > 1) {
+    const parsed_2 = parsed_1[1].split(end)
+    return parsed_2[0]
+  }
+  return null
+}
 
-export async function fetchAndScrapeUrl(url: string): Promise<WishlistItem> {
+export async function fetchAndScrapeUrl (url: string): Promise<WishlistItem> {
   try {
-    let titleId: number
-
     const res = await fetch(url)
     const html = await res.text()
 
     const doc = <HTMLElement>htmlToElement(html)
-    // const gameIdElement = <HTMLAnchorElement>doc.querySelector(gameIdQuery)
-    if (url.includes('nintendo.com')) {
-      // We are on NA store
-      const parsed_1 = html.split('"nsuid":"')
-      const parsed_2 = parsed_1[1].split('",')
-      titleId = parseInt(parsed_2[0])
-    } else {
-      // We are on RU store
-      const parsed_1 = html.split('nsuid: "')
-      const parsed_2 = parsed_1[1].split('",')
-      titleId = parseInt(parsed_2[0])
-    }
-    const title = <HTMLElement>doc.querySelector(nameQuery)
+    const title = <HTMLElement>doc.querySelector('h1')
+    const locale = pickBetween(html, 'lang="', '"')
+    const [lang, country] = locale.split('-')
+
+    const titleId = parseInt(pickBetween(html, '"nsuid":"', '",') || pickBetween(html, 'nsuid: "', '",'))
+
+    // Save locale for future calls
+    await chrome.storage.sync.set({ locale: { country, lang } })
+
     const [{ discount_price, regular_price }] = await fetchPrice(titleId)
 
-    try {
-      return {
-        title: title.innerText.trim(),
-        price: discount_price ? discount_price.amount : regular_price.amount,
-        ogPrice: discount_price ? regular_price.amount : '',
-        saleEnds: discount_price ? `Sale ends ${(new Date(discount_price.end_datetime)).toLocaleString()}` : '',
-        url,
-        titleId
-      }
-    } catch (e) {
-      // console.log(e);
-      throw new Error(`Could not parse response from ${url}`)
+    return {
+      title: title.innerText.trim(),
+      price: discount_price ? discount_price.amount : regular_price.amount,
+      ogPrice: discount_price ? regular_price.amount : '',
+      saleEnds: discount_price ? `Sale ends ${(new Date(discount_price.end_datetime)).toLocaleString()}` : '',
+      url,
+      titleId
     }
   } catch (err) {
     throw err
   }
 }
 
-export function fetchPrice(titleId: number | string): Promise<FetchPricesResponse[]> {
-  return new Promise((resolve, reject) => {
+export async function fetchPrice (titleId: number | string): Promise<FetchPricesResponse[]> {
+  return await new Promise((resolve, reject) => {
     chrome.storage.sync.get(['locale'], async function ({ locale }) {
       const country = locale.country || 'US'
       const lang = locale.lang || 'en'
       try {
-        const priceApi = await fetch(`https://api.ec.nintendo.com/v1/price?country=${country}&lang=${lang}&ids=${titleId}`)
+        const priceApi = await fetch(`https://api.ec.nintendo.com/v1/price?country=${country.toUpperCase()}&lang=${lang}&ids=${titleId}`)
         const priceRes = await priceApi.json()
         resolve(priceRes.prices)
       } catch (error) {
@@ -72,17 +67,17 @@ export function fetchPrice(titleId: number | string): Promise<FetchPricesRespons
   })
 }
 
-function htmlToElement(html: string) {
+function htmlToElement (html: string) {
   const template = document.createElement('template')
   html = html.trim() // Never return a text node of whitespace as the result
   template.innerHTML = html
   return template.content.cloneNode(true)
 }
 
-export function refreshPriceData(): Promise<void> {
-  return new Promise((resolve) => {
+export async function refreshPriceData (): Promise<void> {
+  return await new Promise((resolve) => {
     getWishlist(wishlist => {
-      if (!wishlist.items.length) {
+      if (wishlist.items.length === 0) {
         return resolve()
       }
 
