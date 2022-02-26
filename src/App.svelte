@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Wishlist from './Wishlist.svelte';
 	import { onMount } from 'svelte';
-	import {isOnStoreUrl, getWishlist, updateWishlist} from './helpers/browserApi'
+	import { isOnStoreUrl, getWishlist, updateWishlist } from './helpers/browserApi'
 	import { fetchAndScrapeUrl, refreshPriceData } from './helpers/pageScraping'
 	import orderBy from 'lodash.orderby'
 

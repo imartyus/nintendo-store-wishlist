@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {updateWishlist} from './helpers/browserApi'
+  import { updateWishlist } from './helpers/browserApi'
 
   export let gameList
   export let sortBy
