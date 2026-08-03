@@ -8,6 +8,7 @@
 	let onStoreUrl: string
 	let onStoreAlreadyAdded: boolean
 	let loading: boolean
+	let fetchError = false
 	let gameList = []
 	let sortBy: 'title' | 'price'
 	let sortOrder: 'asc' | 'desc'
@@ -30,6 +31,7 @@
 	function addGameFromTab () {
 		getWishlist(wishlist => {
 			loading = true
+			fetchError = false
 			fetchAndScrapeUrl(onStoreUrl)
 				.then(gameData => {
 					if (gameData) {
@@ -42,6 +44,8 @@
 				})
 				.catch(err => {
 					console.log('Error in adding from tab: ', err);
+					loading = false
+					fetchError = true
 				})
 		})
 	}
@@ -86,6 +90,11 @@
 			<button class="btn btn-add" disabled={loading || onStoreAlreadyAdded} on:click={addGameFromTab}>
 				{loading ? 'Adding!' : onStoreAlreadyAdded ? 'Already in Wishlist' : 'Add this game to Wishlist'}
 			</button>
+		</section>
+		<section>
+			{#if fetchError}
+				<div class="error-msg">Could not fetch game data :(</div>
+			{/if}
 		</section>
 	{/if}
 	<svg class="nin-logo">
@@ -133,11 +142,12 @@
   padding: 12px;
 }
 
-/* .error-msg {
+.error-msg {
   color: var(--color-error);
   font-size: 13px;
   margin-left: 8px;
-} */
+	margin-top: 8px;
+}
 
 /* .warn-msg {
   color: var(--color-warn);

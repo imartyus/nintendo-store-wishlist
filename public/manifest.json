@@ -1,7 +1,7 @@
 {
   "name": "Nintendo Store Wishlist",
-  "description": "Keep track of the games you want to buy on Nintendo Store and their current prices.",
-  "version": "1.0.0",
+  "description": "Keep track of the games you want to buy on Nintendo Store and their current prices",
+  "version": "1.1.0",
   "manifest_version": 3,
   "action": {
     "default_popup": "index.html",

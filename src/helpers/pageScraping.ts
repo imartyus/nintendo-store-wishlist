@@ -28,6 +28,11 @@ export async function fetchAndScrapeUrl (url: string): Promise<WishlistItem> {
 
     const doc = <HTMLElement>htmlToElement(html)
     const title = <HTMLElement>doc.querySelector('h1')
+
+    if (!title) {
+      throw new Error('Title not found')
+    }
+
     const locale = pickBetween(html, 'lang="', '"')
     const [lang, country] = locale.split('-')
 
