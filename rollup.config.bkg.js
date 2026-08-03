@@ -1,4 +1,5 @@
 import commonjs from '@rollup/plugin-commonjs'
+import resolve from '@rollup/plugin-node-resolve'
 import { terser } from 'rollup-plugin-terser'
 import typescript from '@rollup/plugin-typescript'
 
@@ -10,10 +11,16 @@ export default {
     file: 'public/background.js'
   },
   plugins: [
+    resolve({
+      browser: true,
+      extensions: ['.mjs', '.js', '.json', '.ts']
+    }),
     commonjs(),
     typescript({
       sourceMap: false,
-      inlineSources: false
+      inlineSources: false,
+      tsconfig: './tsconfig.json',
+      include: ['src/**/*.ts', 'src/**/*.d.ts']
     }),
     terser()
   ]
